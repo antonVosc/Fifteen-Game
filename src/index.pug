@@ -12,11 +12,11 @@ html(lang = "en")
     .page
       h1 Fifteen Game
 
-      .fifteen
+      .fifteen#fifteen
         each val in values
-          button.item
+          button.item(data-matrix-id=val)
             span.itemVal= val
       
-      button.button Shuffle
+      button.button#shuffle Shuffle
     
     script(src="/js/index.js")
