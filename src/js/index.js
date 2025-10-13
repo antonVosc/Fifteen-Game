@@ -11,11 +11,26 @@ itemNodes[countItems - 1].style.display = "none";
 let matrix = getMatrix(itemNodes.map((item) => Number(item.dataset.matrixId)));
 setPositionItems(matrix);
 
-document.getElementById("shuffle").addEventListener("click", () => {
-  const shuffledArray = shuffleArray(matrix.flat());
-  matrix = getMatrix(shuffledArray);
+const maxShuffleCount = 50;
+let timer;
 
-  setPositionItems(matrix);
+document.getElementById("shuffle").addEventListener("click", () => {
+  let shuffleCount = 0;
+
+  clearInterval(timer);
+
+  if (shuffleCount === 0) {
+    timer = setInterval(() => {
+      randomSwap(matrix);
+      setPositionItems(matrix);
+
+      shuffleCount += 1;
+
+      if (shuffleCount >= maxShuffleCount) {
+        clearInterval(timer);
+      }
+   }, 200);
+  }
 })
 
 const blankNumber = 16;
@@ -82,6 +97,34 @@ window.addEventListener(`keydown`, (event) => {
   swap(blankCoords, buttonCoords, matrix);
   setPositionItems(matrix);
 });
+
+function randomSwap(matrix) {
+  const blankCoords = findCoordinatesByNumber(blankNumber, matrix);
+  const validCoords = findValidCoords({
+    blankCoords,
+    matrix,
+  });
+
+  const swapCoords = validCoords[
+    Math.floor(Math.random() * validCoords.length)
+  ];
+
+  swap(blankCoords, swapCoords, matrix);
+}
+
+function findValidCoords({ blankCoords, matrix }) {
+  const validCoords = [];
+
+  for (let y = 0; y < matrix.length; y++) {
+    for (let x = 0; x < matrix[y].length; x++) {
+      if (isValidForSwap({ x, y }, blankCoords)) {
+        validCoords.push({ x, y });
+      }
+    }
+  }
+
+  return validCoords;
+}
 
 function getMatrix(arr) {
   const matrix = [[], [], [], []];
