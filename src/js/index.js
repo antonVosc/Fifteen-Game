@@ -1,3 +1,4 @@
+const gameNode = document.getElementById("game");
 const containerNode = document.getElementById("fifteen");
 const itemNodes = Array.from(containerNode.querySelectorAll(".item"));
 const countItems = 16;
@@ -11,13 +12,22 @@ itemNodes[countItems - 1].style.display = "none";
 let matrix = getMatrix(itemNodes.map((item) => Number(item.dataset.matrixId)));
 setPositionItems(matrix);
 
-const maxShuffleCount = 50;
+const maxShuffleCount = 100;
 let timer;
+let shuffled = false;
+const shuffledClassName = 'gameShuffle';
 
 document.getElementById("shuffle").addEventListener("click", () => {
+  if (shuffled) {
+    return;
+  }
+
+  shuffled = true;
   let shuffleCount = 0;
 
   clearInterval(timer);
+
+  gameNode.classList.add(shuffledClassName);
 
   if (shuffleCount === 0) {
     timer = setInterval(() => {
@@ -27,15 +37,21 @@ document.getElementById("shuffle").addEventListener("click", () => {
       shuffleCount += 1;
 
       if (shuffleCount >= maxShuffleCount) {
+        gameNode.classList.remove(shuffledClassName);
         clearInterval(timer);
+        shuffled = false;
       }
-   }, 200);
+   }, 70);
   }
 })
 
 const blankNumber = 16;
 
 containerNode.addEventListener("click", (event) => {
+  if (shuffled) {
+    return;
+  }
+
   const buttonNode = event.target.closest("button");
 
   if (!buttonNode) {
@@ -55,6 +71,10 @@ containerNode.addEventListener("click", (event) => {
 })
 
 window.addEventListener(`keydown`, (event) => {
+  if (shuffled) {
+    return;
+  }
+
   if (!event.key.includes(`Arrow`)) {
     return;
   }
@@ -98,11 +118,14 @@ window.addEventListener(`keydown`, (event) => {
   setPositionItems(matrix);
 });
 
+let blockedCoords = null;
+
 function randomSwap(matrix) {
   const blankCoords = findCoordinatesByNumber(blankNumber, matrix);
   const validCoords = findValidCoords({
     blankCoords,
     matrix,
+    blockedCoords,
   });
 
   const swapCoords = validCoords[
@@ -110,15 +133,19 @@ function randomSwap(matrix) {
   ];
 
   swap(blankCoords, swapCoords, matrix);
+
+  blockedCoords = blankCoords;
 }
 
-function findValidCoords({ blankCoords, matrix }) {
+function findValidCoords({ blankCoords, matrix, blockedCoords }) {
   const validCoords = [];
 
   for (let y = 0; y < matrix.length; y++) {
     for (let x = 0; x < matrix[y].length; x++) {
       if (isValidForSwap({ x, y }, blankCoords)) {
-        validCoords.push({ x, y });
+        if (!blockedCoords || !(blockedCoords.x === x && blockedCoords.y === y)) {
+          validCoords.push({ x, y });
+        }
       }
     }
   }
